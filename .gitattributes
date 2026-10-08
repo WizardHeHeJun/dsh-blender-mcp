@@ -1,0 +1,10 @@
+# 发布包跨平台：文本文件统一 LF，避免行尾随检出机器漂移而污染 diff。
+* text=auto eol=lf
+
+# 内嵌的上游插件是 Python 源码，但我们是原样内嵌并按 sha256 校验完整性；
+# 任何行尾转换都会让哈希对不上，因此显式声明为二进制，禁掉所有转换。
+lib/addon/blender_mcp.py binary
+
+*.png binary
+*.jpg binary
+*.tgz binary

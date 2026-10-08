@@ -1,0 +1,8 @@
+# 依赖目录：由 package.json + pnpm-lock.yaml 还原，不进库。
+node_modules/
+
+# 打包产物
+*.tgz
+
+# 同步脚本的临时目录
+.tmp/

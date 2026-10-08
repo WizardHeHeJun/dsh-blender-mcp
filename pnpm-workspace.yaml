@@ -1,0 +1,3 @@
+# pnpm 10+ 默认不执行依赖的构建脚本；本包没有需要构建的原生依赖，
+# 这里显式声明为空，避免安装时出现「ignored build scripts」警告。
+ignoredBuiltDependencies: []

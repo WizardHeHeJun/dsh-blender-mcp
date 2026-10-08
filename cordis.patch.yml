@@ -1,0 +1,51 @@
+# ============================================================================
+# dsh-blender-mcp —— DSH bundle patch
+# ============================================================================
+# 本文件是插件的「挂载声明」。DSH 启动时按 bundle 层栈叠加各插件 patch：
+# 先按 package.json 的 dsh.profile.bundles 顺序叠加各 bundle，再叠加 profile
+# 自己的 cordis.patch.yml，最后是 home 级 patch 与 --patch 覆盖层。
+#
+# 这里做两件事：
+#
+# 1. `mcp-blender-server`：注册 Blender MCP 服务端。它的工具会以
+#    `mcp__blender__<tool>` 出现在模型工具列表里。之所以由本包注册而不是让
+#    用户手写 profile 配置，正是因为上游 `mcp-for-blender` 的一键安装脚本
+#    覆盖 Claude Desktop / Codex / Cursor 等客户端，但不认 DSH。
+#
+# 2. `blender-mcp`：本插件自身，注册只读体检工具 `blender_mcp_doctor`。
+#
+# 安装：
+#   dsh plugin --profile <name> add dsh-blender-mcp
+# 本地开发：
+#   dsh plugin --profile <name> add link:<本目录绝对路径>
+#
+# 注意：`serverName` 在同一个注册作用域内必须唯一。如果你此前已经手工往
+# profile 的 cordis.patch.yml 加过等价的 mcp-client 条目（同样的
+# `serverName: blender`），请先删除手工条目，否则加载时会因重名而失败。
+# ============================================================================
+
+- insert:
+    # Blender MCP 服务端。服务端经 localhost:9876 连 Blender 里的 socket，
+    # 因此使用前需要 Blender 处于打开状态；连不上时用 blender_mcp_doctor 体检。
+    #
+    # 端口由两处共同决定：这里服务端连的端口，以及 Blender 插件面板里监听的
+    # 端口。默认都是 9876，改一处必须同时改另一处。
+    - id: mcp-blender-server
+      name: '@deepseek-ai/dsh-mcp-client'
+      config:
+        serverName: blender
+        transport: stdio
+        # uvx 会按需拉取并缓存 mcp-for-blender。若你的客户端解析不到 uvx，
+        # 把 command 换成 uvx 的绝对路径（Windows 通常是
+        # C:\Users\<你>\.local\bin\uvx.exe）。
+        command: uvx
+        args: ['--from', 'mcp-for-blender', 'mcp-for-blender']
+        # 渲染与批量导入可能远超默认的 60 秒，放宽单次工具调用上限。
+        toolCallTimeoutMs: 300000
+        env:
+          # 上游默认会采集一份最小匿名用量记录；这里显式关闭。
+          DISABLE_TELEMETRY: 'true'
+
+    # 本插件自身：只读体检工具。
+    - id: blender-mcp
+      name: dsh-blender-mcp
